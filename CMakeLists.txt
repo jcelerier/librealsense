@@ -71,7 +71,7 @@ if(UNIX)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-switch -Wno-multichar")
 endif()
 
-add_library(realsense SHARED ${REALSENSE_CPP} ${REALSENSE_HPP} ${REALSENSE_DEF})
+add_library(realsense STATIC ${REALSENSE_CPP} ${REALSENSE_HPP} ${REALSENSE_DEF})
 target_link_libraries(realsense ${LibUSB_LIBRARIES})
 target_include_directories(realsense PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include/ ${LibUSB_INCLUDE_DIRS})
 
