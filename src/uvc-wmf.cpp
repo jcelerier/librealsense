@@ -38,6 +38,7 @@
 #include <algorithm>
 #include <regex>
 #include <map>
+#include <cmath>
 
 #include <strsafe.h>
 
@@ -595,7 +596,7 @@ namespace rsimpl
             sub.get_media_source();
             if(option == RS_OPTION_COLOR_EXPOSURE)
             {
-                check("IAMCameraControl::Set", sub.am_camera_control->Set(CameraControl_Exposure, static_cast<int>(std::round(log2(static_cast<double>(value) / 10000))), CameraControl_Flags_Manual));
+                check("IAMCameraControl::Set", sub.am_camera_control->Set(CameraControl_Exposure, static_cast<int>(std::round(std::log2(static_cast<double>(value) / 10000))), CameraControl_Flags_Manual));
                 return;
             }
             if(option == RS_OPTION_COLOR_ENABLE_AUTO_EXPOSURE)
@@ -630,7 +631,7 @@ namespace rsimpl
             throw std::runtime_error("unsupported control");
         }
 
-        int win_to_uvc_exposure(int value) { return static_cast<int>(std::round(exp2(static_cast<double>(value)) * 10000)); }
+        int win_to_uvc_exposure(int value) { return static_cast<int>(std::round(std::exp2(static_cast<double>(value)) * 10000)); }
 
         void get_pu_control_range(const device & device, int subdevice, rs_option option, int * min, int * max)
         {
