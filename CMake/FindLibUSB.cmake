@@ -15,6 +15,14 @@
 include ( CheckLibraryExists )
 include ( CheckIncludeFile )
 
+if(LibUSB_FIND_STATIC)
+	if(WIN32)
+		set(CMAKE_FIND_LIBRARY_SUFFIXES .lib .a ${CMAKE_FIND_LIBRARY_SUFFIXES})
+	else()
+		set(CMAKE_FIND_LIBRARY_SUFFIXES .a ${CMAKE_FIND_LIBRARY_SUFFIXES})
+	endif()
+endif()
+
 find_package ( PkgConfig )
 if ( PKG_CONFIG_FOUND )
   pkg_check_modules ( PKGCONFIG_LIBUSB libusb-1.0 )
