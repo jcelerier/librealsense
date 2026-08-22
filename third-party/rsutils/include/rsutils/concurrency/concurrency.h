@@ -3,6 +3,7 @@
 
 #pragma once
 #include <queue>
+#include <memory>
 #include <mutex>
 #include <condition_variable>
 #include <thread>
@@ -345,22 +346,32 @@ public:
     template<class T>
     void invoke_and_wait(T item, std::function<bool()> exit_condition, bool is_blocking = false)
     {
-        bool done = false;
+        // Shared rather than captured by reference: the wait below is released
+        // by exit_condition() as well as by done, so it can return before the
+        // queued action has run -- and this frame is gone by the time the
+        // dispatcher reaches it. The mutex and condition variable belong to the
+        // dispatcher, which outlives the queue, so those stay by reference.
+        //
+        // (Upstream solved this differently on development, by cancelling the
+        // action when the wait gives up. Backported minimally here.)
+        auto done = std::make_shared<bool>(false);
 
         //action
         auto func = std::move(item);
-        invoke([&, func](dispatcher::cancellable_timer c)
+        auto & mutex = _blocking_invoke_mutex;
+        auto & cv = _blocking_invoke_cv;
+        invoke([done, func, &mutex, &cv](dispatcher::cancellable_timer c)
         {
-            std::lock_guard<std::mutex> lk(_blocking_invoke_mutex);
+            std::lock_guard<std::mutex> lk(mutex);
             func(c);
 
-            done = true;
-            _blocking_invoke_cv.notify_one();
+            *done = true;
+            cv.notify_one();
         }, is_blocking);
 
         //wait
         std::unique_lock<std::mutex> lk(_blocking_invoke_mutex);
-        _blocking_invoke_cv.wait(lk, [&](){ return done || exit_condition(); });
+        _blocking_invoke_cv.wait(lk, [&](){ return *done || exit_condition(); });
     }
 
     // Stops the dispatcher. This is not a pause: it will clear out the queue, losing any pending

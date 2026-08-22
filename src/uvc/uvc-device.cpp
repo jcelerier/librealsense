@@ -170,7 +170,10 @@ namespace librealsense
 
         void rs_uvc_device::set_power_state(power_state state)
         {
-            _action_dispatcher.invoke_and_wait([&, this](dispatcher::cancellable_timer c)
+            // state by value: invoke_and_wait returns as soon as its exit
+            // condition holds, which can be before this has run, and
+            // set_power_state's frame is gone by then.
+            _action_dispatcher.invoke_and_wait([state, this](dispatcher::cancellable_timer c)
             {
                 if(state != _power_state)
                 {
