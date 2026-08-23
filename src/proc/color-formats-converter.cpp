@@ -20,7 +20,10 @@
 #endif
 #include "neon/image-neon.h"
 
-#if defined (ANDROID) || (defined (__linux__) && !defined (__x86_64__)) || (defined (__APPLE__) && !defined (__x86_64__))
+// The list covers every non-x86 target except the Windows ones: MSVC spells its
+// architecture _M_ARM64 / _M_ARM, so a Windows-on-ARM build fell through to the
+// x86 branch below and its __cpuidex, which does not exist there.
+#if defined (ANDROID) || (defined (__linux__) && !defined (__x86_64__)) || (defined (__APPLE__) && !defined (__x86_64__)) || defined (_M_ARM64) || defined (_M_ARM)
 
 bool has_avx() { return false; }
 
