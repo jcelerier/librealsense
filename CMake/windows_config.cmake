@@ -88,8 +88,20 @@ macro(os_set_flags)
 endmacro()
 
 macro(os_target_config)
-    message(STATUS "Building with SSE optimizations")
-    add_definitions(-D__SSSE3__ -D_CRT_SECURE_NO_WARNINGS)
+    add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+
+    # __SSSE3__ is what src/proc/sse/*.cpp is guarded on, so defining it for
+    # every Windows target compiles the SSE path on Windows-on-ARM too, and the
+    # toolchain's own header stops the build: "tmmintrin.h(10): fatal error
+    # C1189: This header is specific to X86, X64, ARM64, and ARM64EC targets".
+    # The NEON path next door needs __ARM_NEON, which is a gcc/clang spelling
+    # MSVC does not use, so ARM64 falls back to the scalar implementations.
+    if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(ARM64|arm64|aarch64|ARM|arm)$")
+        message(STATUS "Building without SSE optimizations (ARM target)")
+    else()
+        message(STATUS "Building with SSE optimizations")
+        add_definitions(-D__SSSE3__)
+    endif()
 
     if(FORCE_RSUSB_BACKEND)
         if (NOT CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR)
